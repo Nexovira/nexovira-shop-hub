@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Zap, User, LayoutDashboard, LogOut } from "lucide-react";
+import { Zap, User, LayoutDashboard, LogOut, ShoppingCart, Package } from "lucide-react";
+import { useCart } from "@/lib/cart";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ export function SiteHeader() {
   const [email, setEmail] = useState<string | null>(null);
   const isAdmin = useIsAdmin();
   const queryClient = useQueryClient();
+  const { count } = useCart();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -54,6 +56,17 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="relative gap-2">
+            <Link to="/cart">
+              <ShoppingCart className="h-4 w-4" />
+              <span className="hidden sm:inline">Cart</span>
+              {count > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-primary">
+                  {count}
+                </span>
+              )}
+            </Link>
+          </Button>
           {email ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -65,6 +78,11 @@ export function SiteHeader() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/orders" className="cursor-pointer">
+                    <Package className="mr-2 h-4 w-4" /> My orders
+                  </Link>
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="cursor-pointer">
