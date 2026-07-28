@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
@@ -130,27 +130,29 @@ function HomePage() {
             {products.map((p) => {
               const img = p.product_images?.find((i: any) => i.is_primary)?.image_url || p.product_images?.[0]?.image_url;
               return (
-                <Card key={p.id} className="overflow-hidden shadow-soft hover:shadow-lifted transition-all group p-0">
-                  <div className="aspect-square bg-muted overflow-hidden">
-                    {img ? (
-                      <img src={img} alt={p.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                        <Zap className="h-8 w-8" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold line-clamp-1">{p.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.short_description}</p>
-                    <div className="mt-3 flex items-baseline gap-2">
-                      <span className="text-lg font-bold">₦{(p.discount_price ?? p.price).toLocaleString()}</span>
-                      {p.discount_price && (
-                        <span className="text-xs line-through text-muted-foreground">₦{p.price.toLocaleString()}</span>
+                <Link key={p.id} to="/products/$slug" params={{ slug: p.slug }}>
+                  <Card className="overflow-hidden shadow-soft hover:shadow-lifted transition-all group p-0 h-full">
+                    <div className="aspect-square bg-muted overflow-hidden">
+                      {img ? (
+                        <img src={img} alt={p.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                          <Zap className="h-8 w-8" />
+                        </div>
                       )}
                     </div>
-                  </div>
-                </Card>
+                    <div className="p-4">
+                      <h3 className="font-semibold line-clamp-1">{p.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.short_description}</p>
+                      <div className="mt-3 flex items-baseline gap-2">
+                        <span className="text-lg font-bold">₦{(p.discount_price ?? p.price).toLocaleString()}</span>
+                        {p.discount_price && (
+                          <span className="text-xs line-through text-muted-foreground">₦{p.price.toLocaleString()}</span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
               );
             })}
           </div>

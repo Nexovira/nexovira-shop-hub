@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, FolderTree, Home, Zap, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, Home, Zap, LogOut, ShoppingBag } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter,
@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
   { title: "Products", url: "/admin/products", icon: Package },
   { title: "Categories", url: "/admin/categories", icon: FolderTree },
 ];
