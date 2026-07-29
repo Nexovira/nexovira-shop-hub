@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, FolderTree, Home, Zap, LogOut, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, Home, Zap, LogOut, ShoppingBag, Truck } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter,
@@ -12,6 +12,7 @@ const items = [
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
   { title: "Products", url: "/admin/products", icon: Package },
   { title: "Categories", url: "/admin/categories", icon: FolderTree },
+  { title: "Shipping", url: "/admin/shipping", icon: Truck },
 ];
 
 export function AdminSidebar() {
