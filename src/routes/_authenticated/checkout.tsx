@@ -1,11 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useCart, formatNaira } from "@/lib/cart";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,10 +20,19 @@ export const Route = createFileRoute("/_authenticated/checkout")({
   component: CheckoutPage,
 });
 
+type Zone = {
+  id: string;
+  name: string;
+  state: string;
+  area: string | null;
+  fee: number;
+};
+
 function CheckoutPage() {
   const navigate = useNavigate();
   const { items, subtotal, clear } = useCart();
   const [loading, setLoading] = useState(false);
+  const [zoneId, setZoneId] = useState<string>("");
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -27,11 +40,24 @@ function CheckoutPage() {
     address_line1: "",
     address_line2: "",
     city: "",
-    state: "",
     notes: "",
   });
 
-  const shipping = subtotal > 0 ? 4500 : 0;
+  const { data: zones } = useQuery({
+    queryKey: ["shipping_zones", "active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shipping_zones")
+        .select("id, name, state, area, fee")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as Zone[];
+    },
+  });
+
+  const selectedZone = useMemo(() => zones?.find((z) => z.id === zoneId) ?? null, [zones, zoneId]);
+  const shipping = selectedZone ? Number(selectedZone.fee) : 0;
   const total = subtotal + shipping;
 
   function up<K extends keyof typeof form>(k: K) {
@@ -42,6 +68,7 @@ function CheckoutPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (items.length === 0) return toast.error("Your cart is empty");
+    if (!selectedZone) return toast.error("Please select a delivery zone");
     setLoading(true);
 
     const { data: userData } = await supabase.auth.getUser();
@@ -56,7 +83,8 @@ function CheckoutPage() {
       address_line1: form.address_line1,
       address_line2: form.address_line2 || null,
       city: form.city,
-      state: form.state,
+      state: selectedZone.state,
+      shipping_zone_id: selectedZone.id,
       notes: form.notes || null,
       subtotal, shipping_fee: shipping, total,
       status: "pending",
@@ -103,8 +131,23 @@ function CheckoutPage() {
               <div className="space-y-2 sm:col-span-2"><Label>Email</Label><Input required type="email" value={form.email} onChange={up("email")} /></div>
               <div className="space-y-2 sm:col-span-2"><Label>Address line 1</Label><Input required value={form.address_line1} onChange={up("address_line1")} /></div>
               <div className="space-y-2 sm:col-span-2"><Label>Address line 2 (optional)</Label><Input value={form.address_line2} onChange={up("address_line2")} /></div>
-              <div className="space-y-2"><Label>City</Label><Input required value={form.city} onChange={up("city")} /></div>
-              <div className="space-y-2"><Label>State</Label><Input required value={form.state} onChange={up("state")} /></div>
+              <div className="space-y-2"><Label>City / town</Label><Input required value={form.city} onChange={up("city")} /></div>
+              <div className="space-y-2">
+                <Label>Delivery zone</Label>
+                <Select value={zoneId} onValueChange={setZoneId}>
+                  <SelectTrigger><SelectValue placeholder="Select a zone" /></SelectTrigger>
+                  <SelectContent>
+                    {zones?.map((z) => (
+                      <SelectItem key={z.id} value={z.id}>
+                        {z.name} — {formatNaira(Number(z.fee))}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedZone?.area && (
+                  <p className="text-xs text-muted-foreground">{selectedZone.area}</p>
+                )}
+              </div>
               <div className="space-y-2 sm:col-span-2"><Label>Order notes (optional)</Label><Textarea rows={3} value={form.notes} onChange={up("notes")} /></div>
             </div>
 
@@ -125,12 +168,15 @@ function CheckoutPage() {
             </ul>
             <dl className="pt-4 border-t border-border space-y-1 text-sm">
               <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatNaira(subtotal)}</dd></div>
-              <div className="flex justify-between"><dt>Shipping</dt><dd>{formatNaira(shipping)}</dd></div>
+              <div className="flex justify-between">
+                <dt>Shipping{selectedZone ? ` (${selectedZone.name})` : ""}</dt>
+                <dd>{selectedZone ? formatNaira(shipping) : <span className="text-muted-foreground">Select zone</span>}</dd>
+              </div>
               <div className="pt-2 border-t border-border flex justify-between font-bold text-base">
                 <dt>Total</dt><dd>{formatNaira(total)}</dd>
               </div>
             </dl>
-            <Button type="submit" size="lg" disabled={loading || items.length === 0}
+            <Button type="submit" size="lg" disabled={loading || items.length === 0 || !selectedZone}
               className="w-full bg-accent-gradient text-primary font-semibold hover:opacity-90">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Place order
             </Button>
