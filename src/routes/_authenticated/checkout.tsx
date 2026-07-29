@@ -31,7 +31,7 @@ function CheckoutPage() {
     notes: "",
   });
 
-  const shipping = subtotal > 0 ? 2500 : 0;
+  const shipping = subtotal > 0 ? 4500 : 0;
   const total = subtotal + shipping;
 
   function up<K extends keyof typeof form>(k: K) {
