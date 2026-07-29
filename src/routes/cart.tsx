@@ -28,7 +28,7 @@ function CartPage() {
     supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user));
   }, []);
 
-  const shipping = subtotal > 0 ? 2500 : 0;
+  const shipping = subtotal > 0 ? 4500 : 0;
   const total = subtotal + shipping;
 
   return (
