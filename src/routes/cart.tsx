@@ -80,7 +80,7 @@ function CartPage() {
                 <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatNaira(subtotal)}</dd></div>
                 <div className="flex justify-between"><dt>Shipping</dt><dd className="text-muted-foreground">Calculated at checkout</dd></div>
                 <div className="pt-2 border-t border-border flex justify-between font-bold text-base">
-                  <dt>Total</dt><dd>{formatNaira(total)}</dd></div>
+                  <dt>Total</dt><dd>{formatNaira(total)}</dd>
                 </div>
               </dl>
               <Button
