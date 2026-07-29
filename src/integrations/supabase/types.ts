@@ -110,6 +110,7 @@ export type Database = {
           payment_reference: string | null
           phone: string
           shipping_fee: number
+          shipping_zone_id: string | null
           state: string
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
@@ -131,6 +132,7 @@ export type Database = {
           payment_reference?: string | null
           phone: string
           shipping_fee?: number
+          shipping_zone_id?: string | null
           state: string
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
@@ -152,6 +154,7 @@ export type Database = {
           payment_reference?: string | null
           phone?: string
           shipping_fee?: number
+          shipping_zone_id?: string | null
           state?: string
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
@@ -159,7 +162,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_shipping_zone_id_fkey"
+            columns: ["shipping_zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_images: {
         Row: {
@@ -299,6 +310,42 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shipping_zones: {
+        Row: {
+          area: string | null
+          created_at: string
+          fee: number
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string
+          fee?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          created_at?: string
+          fee?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          state?: string
           updated_at?: string
         }
         Relationships: []
