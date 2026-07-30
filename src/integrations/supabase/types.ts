@@ -47,6 +47,41 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          order_id: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -101,6 +136,7 @@ export type Database = {
           address_line2: string | null
           city: string
           created_at: string
+          credit_applied: number
           email: string
           full_name: string
           id: string
@@ -108,6 +144,8 @@ export type Database = {
           order_number: string
           payment_provider: string | null
           payment_reference: string | null
+          paystack_reference: string | null
+          paystack_status: string | null
           phone: string
           shipping_fee: number
           shipping_zone_id: string | null
@@ -123,6 +161,7 @@ export type Database = {
           address_line2?: string | null
           city: string
           created_at?: string
+          credit_applied?: number
           email: string
           full_name: string
           id?: string
@@ -130,6 +169,8 @@ export type Database = {
           order_number?: string
           payment_provider?: string | null
           payment_reference?: string | null
+          paystack_reference?: string | null
+          paystack_status?: string | null
           phone: string
           shipping_fee?: number
           shipping_zone_id?: string | null
@@ -145,6 +186,7 @@ export type Database = {
           address_line2?: string | null
           city?: string
           created_at?: string
+          credit_applied?: number
           email?: string
           full_name?: string
           id?: string
@@ -152,6 +194,8 @@ export type Database = {
           order_number?: string
           payment_provider?: string | null
           payment_reference?: string | null
+          paystack_reference?: string | null
+          paystack_status?: string | null
           phone?: string
           shipping_fee?: number
           shipping_zone_id?: string | null
@@ -291,28 +335,78 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          credit_balance: number
           full_name: string | null
           id: string
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          credit_balance?: number
           full_name?: string | null
           id: string
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          credit_balance?: number
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          referee_id: string
+          referrer_id: string
+          reward_amount: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          referee_id: string
+          referrer_id: string
+          reward_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          referee_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shipping_zones: {
         Row: {
@@ -376,6 +470,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
