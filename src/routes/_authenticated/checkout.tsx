@@ -1,19 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useCart, formatNaira } from "@/lib/cart";
 import { supabase } from "@/integrations/supabase/client";
+import { startPayment } from "@/lib/checkout.functions";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, CreditCard, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   head: () => ({ meta: [{ title: "Checkout — NEXOVIRA" }, { name: "robots", content: "noindex" }] }),
@@ -31,8 +34,11 @@ type Zone = {
 function CheckoutPage() {
   const navigate = useNavigate();
   const { items, subtotal, clear } = useCart();
+  const pay = useServerFn(startPayment);
   const [loading, setLoading] = useState(false);
   const [zoneId, setZoneId] = useState<string>("");
+  const [method, setMethod] = useState<"paystack" | "cash_on_delivery">("paystack");
+  const [useCredit, setUseCredit] = useState(true);
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -56,9 +62,23 @@ function CheckoutPage() {
     },
   });
 
+  const { data: credit } = useQuery({
+    queryKey: ["profile", "credit"],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return 0;
+      const { data } = await supabase
+        .from("profiles").select("credit_balance").eq("id", userData.user.id).maybeSingle();
+      return Number(data?.credit_balance ?? 0);
+    },
+  });
+
   const selectedZone = useMemo(() => zones?.find((z) => z.id === zoneId) ?? null, [zones, zoneId]);
   const shipping = selectedZone ? Number(selectedZone.fee) : 0;
-  const total = subtotal + shipping;
+  const gross = subtotal + shipping;
+  const creditBalance = credit ?? 0;
+  const creditApplied = useCredit ? Math.max(0, Math.min(creditBalance, Math.max(0, gross - 100))) : 0;
+  const total = Math.max(0, gross - creditApplied);
 
   function up<K extends keyof typeof form>(k: K) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -86,9 +106,9 @@ function CheckoutPage() {
       state: selectedZone.state,
       shipping_zone_id: selectedZone.id,
       notes: form.notes || null,
-      subtotal, shipping_fee: shipping, total,
+      subtotal, shipping_fee: shipping, total: gross,
       status: "pending",
-      payment_provider: "cash_on_delivery",
+      payment_provider: method,
     }).select("id, order_number").single();
 
     if (orderErr || !order) {
@@ -110,10 +130,21 @@ function CheckoutPage() {
       return toast.error(itemsErr.message);
     }
 
-    clear();
-    setLoading(false);
-    toast.success(`Order ${order.order_number} placed!`);
-    navigate({ to: "/orders/$id", params: { id: order.id } });
+    try {
+      const res = await pay({ data: { orderId: order.id, useCredit, provider: method } });
+      if (res.mode === "paystack") {
+        clear();
+        window.location.href = res.authorizationUrl;
+        return;
+      }
+      clear();
+      setLoading(false);
+      toast.success(`Order ${order.order_number} placed!`);
+      navigate({ to: "/orders/$id", params: { id: order.id } });
+    } catch (err) {
+      setLoading(false);
+      toast.error((err as Error).message || "Payment could not be started");
+    }
   }
 
   return (
@@ -151,8 +182,36 @@ function CheckoutPage() {
               <div className="space-y-2 sm:col-span-2"><Label>Order notes (optional)</Label><Textarea rows={3} value={form.notes} onChange={up("notes")} /></div>
             </div>
 
-            <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-              <strong className="text-foreground">Payment:</strong> Cash on delivery. Card & Paystack payments will be enabled once merchant keys are added.
+            <div className="pt-2 space-y-3">
+              <h2 className="text-lg font-semibold">Payment method</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <button type="button" onClick={() => setMethod("paystack")}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${method === "paystack" ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground/40"}`}>
+                  <CreditCard className="h-5 w-5 mt-0.5 text-accent" />
+                  <span>
+                    <span className="block font-medium">Pay with Paystack</span>
+                    <span className="block text-xs text-muted-foreground">Card, bank transfer, USSD — secured by Paystack</span>
+                  </span>
+                </button>
+                <button type="button" onClick={() => setMethod("cash_on_delivery")}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors ${method === "cash_on_delivery" ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground/40"}`}>
+                  <Truck className="h-5 w-5 mt-0.5 text-accent" />
+                  <span>
+                    <span className="block font-medium">Cash on delivery</span>
+                    <span className="block text-xs text-muted-foreground">Pay the rider when your order arrives</span>
+                  </span>
+                </button>
+              </div>
+
+              {creditBalance > 0 && (
+                <label className="flex items-center gap-3 rounded-lg border border-border p-4 cursor-pointer">
+                  <Checkbox checked={useCredit} onCheckedChange={(v) => setUseCredit(Boolean(v))} />
+                  <span className="text-sm">
+                    Use my store credit —{" "}
+                    <strong className="text-foreground">{formatNaira(creditBalance)}</strong> available
+                  </span>
+                </label>
+              )}
             </div>
           </Card>
 
@@ -172,14 +231,25 @@ function CheckoutPage() {
                 <dt>Shipping{selectedZone ? ` (${selectedZone.name})` : ""}</dt>
                 <dd>{selectedZone ? formatNaira(shipping) : <span className="text-muted-foreground">Select zone</span>}</dd>
               </div>
+              {creditApplied > 0 && (
+                <div className="flex justify-between text-emerald-500">
+                  <dt>Store credit</dt><dd>−{formatNaira(creditApplied)}</dd>
+                </div>
+              )}
               <div className="pt-2 border-t border-border flex justify-between font-bold text-base">
                 <dt>Total</dt><dd>{formatNaira(total)}</dd>
               </div>
             </dl>
             <Button type="submit" size="lg" disabled={loading || items.length === 0 || !selectedZone}
               className="w-full bg-accent-gradient text-primary font-semibold hover:opacity-90">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Place order
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {method === "paystack" ? "Pay now" : "Place order"}
             </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              {method === "paystack"
+                ? "You'll be redirected to Paystack's secure checkout."
+                : "Have the exact amount ready for the delivery rider."}
+            </p>
           </Card>
         </form>
       </div>

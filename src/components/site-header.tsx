@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Zap, User, LayoutDashboard, LogOut, ShoppingCart, Package } from "lucide-react";
+import { Zap, User, LayoutDashboard, LogOut, ShoppingCart, Package, Gift } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import {
   DropdownMenu,
@@ -83,6 +83,12 @@ export function SiteHeader() {
                     <Package className="mr-2 h-4 w-4" /> My orders
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/referrals" className="cursor-pointer">
+                    <Gift className="mr-2 h-4 w-4" /> Refer &amp; earn
+                  </Link>
+                </DropdownMenuItem>
+
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="cursor-pointer">
