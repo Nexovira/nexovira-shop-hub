@@ -83,6 +83,12 @@ export function SiteHeader() {
                     <Package className="mr-2 h-4 w-4" /> My orders
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/referrals" className="cursor-pointer">
+                    <Gift className="mr-2 h-4 w-4" /> Refer &amp; earn
+                  </Link>
+                </DropdownMenuItem>
+
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="cursor-pointer">
