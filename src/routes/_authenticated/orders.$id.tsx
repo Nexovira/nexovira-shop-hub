@@ -73,6 +73,12 @@ function OrderDetail() {
                   <dl className="text-sm space-y-1">
                     <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatNaira(Number(data.subtotal))}</dd></div>
                     <div className="flex justify-between"><dt>Shipping</dt><dd>{formatNaira(Number(data.shipping_fee))}</dd></div>
+                    {Number(data.credit_applied ?? 0) > 0 && (
+                      <div className="flex justify-between text-primary">
+                        <dt>Store credit applied</dt>
+                        <dd>−{formatNaira(Number(data.credit_applied))}</dd>
+                      </div>
+                    )}
                     <div className="pt-2 mt-2 border-t border-border flex justify-between font-bold">
                       <dt>Total</dt><dd>{formatNaira(Number(data.total))}</dd>
                     </div>
