@@ -28,7 +28,7 @@ function HomePage() {
         .select("id, title, slug, price, discount_price, short_description, product_images(image_url, is_primary)")
         .eq("status", "published")
         .order("created_at", { ascending: false })
-        .limit(8);
+        .limit(200);
       if (error) throw error;
       return data;
     },
