@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, ShieldCheck, Headphones, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import heroAsset from "@/assets/nexovira-hero.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,7 +49,15 @@ function HomePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero text-white">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, oklch(0.78 0.16 70) 0%, transparent 40%)" }} />
+        <img
+          src={heroAsset.url}
+          alt="Modern Nigerian living room fitted with a large TV, refrigerator, microwave and air conditioner"
+          width={1920}
+          height={1088}
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-primary/40" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
@@ -61,11 +70,11 @@ function HomePage() {
               From flagship refrigerators to compact kitchen essentials — NEXOVIRA delivers trusted electrical appliances across Nigeria.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" className="bg-accent-gradient text-primary hover:opacity-90 font-semibold shadow-lifted">
-                Shop the collection <ArrowRight className="ml-2 h-4 w-4" />
+              <Button asChild size="lg" className="bg-accent-gradient text-primary hover:opacity-90 font-semibold shadow-lifted">
+                <a href="#featured">Shop the collection <ArrowRight className="ml-2 h-4 w-4" /></a>
               </Button>
-              <Button size="lg" variant="outline" className="border-white/30 bg-white/5 text-white hover:bg-white/15">
-                Browse categories
+              <Button asChild size="lg" variant="outline" className="border-white/30 bg-white/5 text-white hover:bg-white/15">
+                <a href="#categories">Browse categories</a>
               </Button>
             </div>
           </div>

@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Zap, User, LayoutDashboard, LogOut, ShoppingCart, Package, Gift } from "lucide-react";
+import { User, LayoutDashboard, LogOut, ShoppingCart, Package, Gift, Wallet } from "lucide-react";
+import logoAsset from "@/assets/nexovira-logo.jpeg.asset.json";
 import { useCart } from "@/lib/cart";
 import {
   DropdownMenu,
@@ -40,9 +41,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-hero shadow-soft">
-            <Zap className="h-5 w-5 text-white" strokeWidth={2.5} />
-          </div>
+          <img
+            src={logoAsset.url}
+            alt="NEXOVIRA Global Ventures logo"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-lg object-cover shadow-soft"
+          />
           <div className="leading-tight">
             <div className="text-base font-bold tracking-tight">NEXOVIRA</div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Global Ventures</div>
@@ -86,6 +91,11 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link to="/referrals" className="cursor-pointer">
                     <Gift className="mr-2 h-4 w-4" /> Refer &amp; earn
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/wallet" className="cursor-pointer">
+                    <Wallet className="mr-2 h-4 w-4" /> Store credit
                   </Link>
                 </DropdownMenuItem>
 

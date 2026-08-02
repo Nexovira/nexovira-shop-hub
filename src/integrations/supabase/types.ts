@@ -216,6 +216,39 @@ export type Database = {
           },
         ]
       }
+      payment_webhook_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string | null
+          id: string
+          order_id: string | null
+          payload: Json | null
+          provider: string
+          reference: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_type?: string | null
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          provider?: string
+          reference?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string | null
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          provider?: string
+          reference?: string | null
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           alt_text: string | null
