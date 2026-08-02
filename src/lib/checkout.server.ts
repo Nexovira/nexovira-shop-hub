@@ -63,7 +63,19 @@ export async function applyStoreCredit(
   gross: number,
   requested: boolean,
 ) {
+  // Idempotency: if this order already consumed credit (retry / double submit),
+  // reuse that amount instead of deducting the balance again.
+  const { data: existing } = await admin
+    .from("credit_transactions")
+    .select("amount")
+    .eq("order_id", orderId)
+    .eq("user_id", userId)
+    .lt("amount", 0)
+    .maybeSingle();
+  const alreadyApplied = existing ? Math.abs(Number(existing.amount)) : 0;
+  if (alreadyApplied > 0) return Math.min(alreadyApplied, Math.max(0, gross - 100));
   if (!requested) return 0;
+
   const { data: profile } = await admin
     .from("profiles")
     .select("credit_balance")

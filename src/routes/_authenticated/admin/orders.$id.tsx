@@ -85,6 +85,7 @@ function AdminOrderDetail() {
           <div className="mt-4 pt-4 border-t border-border grid grid-cols-3 text-sm">
             <div><div className="text-muted-foreground">Subtotal</div><div>{formatNaira(Number(data.subtotal))}</div></div>
             <div><div className="text-muted-foreground">Shipping</div><div>{formatNaira(Number(data.shipping_fee))}</div></div>
+            <div><div className="text-muted-foreground">Store credit</div><div>−{formatNaira(Number(data.credit_applied ?? 0))}</div></div>
             <div><div className="text-muted-foreground">Total</div><div className="font-bold">{formatNaira(Number(data.total))}</div></div>
           </div>
         </Card>
