@@ -35,7 +35,7 @@ function ReferralsPage() {
       const [profileRes, referralsRes, creditsRes] = await Promise.all([
         supabase.from("profiles").select("referral_code, credit_balance").eq("id", uid).maybeSingle(),
         supabase.from("referrals").select("id, status, reward_amount, created_at").eq("referrer_id", uid).order("created_at", { ascending: false }),
-        supabase.from("credit_transactions").select("id, amount, reason, created_at").order("created_at", { ascending: false }).limit(20),
+        supabase.from("credit_transactions").select("id, amount, reason, created_at").order("created_at", { ascending: false }).limit(200),
       ]);
 
       return {
