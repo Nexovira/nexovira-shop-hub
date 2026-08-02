@@ -148,18 +148,21 @@ export async function paystackVerify(reference: string) {
 
 /** Mark an order paid exactly once and settle any referral reward. */
 export async function markOrderPaid(admin: AnyClient, orderId: string, reference: string) {
-  const { data: order } = await admin
-    .from("orders")
-    .select("id, user_id, status")
-    .eq("id", orderId)
-    .maybeSingle();
-  if (!order) return;
-  if (order.status === "paid" || order.status === "processing" || order.status === "shipped" || order.status === "delivered") return;
-
-  await admin
+  // Conditional update: only a still-pending order transitions to paid. Concurrent
+  // webhook retries lose the race and affect zero rows, so the referral reward and
+  // any downstream side effects run exactly once.
+  const { data: updated, error } = await admin
     .from("orders")
     .update({ status: "paid", paystack_status: "success", paystack_reference: reference })
-    .eq("id", orderId);
+    .eq("id", orderId)
+    .eq("status", "pending")
+    .select("id, user_id");
 
-  if (order.user_id) await settleReferralReward(admin, order.user_id, orderId);
+  if (error) throw new Error(error.message);
+  const row = updated?.[0];
+  if (!row) return { alreadyProcessed: true };
+
+  if (row.user_id) await settleReferralReward(admin, row.user_id, orderId);
+  return { alreadyProcessed: false };
 }
+
