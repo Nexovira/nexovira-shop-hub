@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, ShieldCheck, Headphones, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import heroAsset from "@/assets/nexovira-hero.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
