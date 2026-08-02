@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { User, LayoutDashboard, LogOut, ShoppingCart, Package, Gift, Wallet } from "lucide-react";
-import logoAsset from "@/assets/nexovira-logo.jpeg.asset.json";
+import logoAsset from "@/assets/nexovira-logo.jpeg";
 import { useCart } from "@/lib/cart";
 import {
   DropdownMenu,
