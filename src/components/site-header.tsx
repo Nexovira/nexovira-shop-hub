@@ -93,6 +93,11 @@ export function SiteHeader() {
                     <Gift className="mr-2 h-4 w-4" /> Refer &amp; earn
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/wallet" className="cursor-pointer">
+                    <Wallet className="mr-2 h-4 w-4" /> Store credit
+                  </Link>
+                </DropdownMenuItem>
 
                 {isAdmin && (
                   <DropdownMenuItem asChild>
