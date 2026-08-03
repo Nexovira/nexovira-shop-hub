@@ -50,7 +50,7 @@ function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero text-white">
         <img
-          src={heroAsset.url}
+          src={heroAsset}
           alt="Modern Nigerian living room fitted with a large TV, refrigerator, microwave and air conditioner"
           width={1920}
           height={1088}
