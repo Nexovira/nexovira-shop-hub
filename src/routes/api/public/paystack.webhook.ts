@@ -78,10 +78,13 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
           return new Response("Storage error", { status: 500 });
         }
 
-        // 3. Process. Only successful charges change order state.
-        if (eventType === "charge.success" && reference && event.data?.status === "success") {
-          const { markOrderPaid } = await import("@/lib/checkout.server");
-          let orderId = event.data.metadata?.order_id ?? null;
+        // 3. Process. Only successful charges change order state, and only after
+        //    an independent server-side verification against Paystack.
+        const { markOrderPaid, paystackVerify, logPayment, siteBaseUrl } = await import("@/lib/checkout.server");
+        const baseUrl = siteBaseUrl(new URL(request.url).origin);
+
+        if (eventType === "charge.success" && reference) {
+          let orderId = event.data?.metadata?.order_id ?? null;
 
           if (!orderId) {
             const { data: order } = await supabaseAdmin
@@ -92,11 +95,64 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
             orderId = order?.id ?? null;
           }
 
-          if (orderId) {
-            await markOrderPaid(supabaseAdmin, orderId, reference);
-          } else {
-            console.warn("[paystack-webhook] no order matched reference", reference);
+          if (!orderId) {
+            await logPayment(supabaseAdmin, {
+              event: "webhook_no_order",
+              level: "warn",
+              reference,
+              message: "No order matched this reference",
+            });
+            return new Response("ok");
           }
+
+          // Never trust the webhook body for money: re-verify with Paystack.
+          const tx = await paystackVerify(reference);
+          await logPayment(supabaseAdmin, {
+            orderId,
+            event: "webhook_verify",
+            reference,
+            message: `Paystack reported ${tx.status}`,
+            context: { amount: tx.amount, transactionId: tx.id ?? null },
+          });
+
+          if (tx.status !== "success") {
+            await supabaseAdmin
+              .from("orders")
+              .update({ paystack_status: tx.status, payment_status: "failed" })
+              .eq("id", orderId);
+            return new Response("ok");
+          }
+
+          const { data: orderRow } = await supabaseAdmin
+            .from("orders")
+            .select("total")
+            .eq("id", orderId)
+            .maybeSingle();
+          const expectedKobo = Math.round(Number(orderRow?.total ?? 0) * 100);
+          if (Number(tx.amount) + 1 < expectedKobo) {
+            await logPayment(supabaseAdmin, {
+              orderId,
+              event: "webhook_amount_mismatch",
+              level: "error",
+              reference,
+              message: `Paid ${tx.amount} kobo but order requires ${expectedKobo}`,
+            });
+            await supabaseAdmin.from("orders").update({ payment_status: "failed" }).eq("id", orderId);
+            return new Response("ok");
+          }
+
+          await markOrderPaid(
+            supabaseAdmin,
+            orderId,
+            reference,
+            {
+              transactionId: tx.id ?? null,
+              amountKobo: Number(tx.amount),
+              paidAt: tx.paid_at ?? null,
+              channel: tx.channel ?? null,
+            },
+            baseUrl,
+          );
         }
 
         return new Response("ok");
