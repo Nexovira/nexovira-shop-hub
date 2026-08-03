@@ -139,7 +139,11 @@ function CheckoutPage() {
       }
       clear();
       setLoading(false);
-      toast.success(`Order ${order.order_number} placed!`);
+      toast.success(
+        res.mode === "credit"
+          ? `Order ${order.order_number} paid with store credit!`
+          : `Order ${order.order_number} placed!`,
+      );
       navigate({ to: "/orders/$id", params: { id: order.id } });
     } catch (err) {
       setLoading(false);
