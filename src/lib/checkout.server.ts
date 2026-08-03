@@ -155,7 +155,15 @@ export async function paystackVerify(reference: string) {
   );
   const json = (await res.json()) as any;
   if (!res.ok || !json?.status) throw new Error(json?.message || "Could not verify payment");
-  return json.data as { status: string; reference: string; amount: number; metadata?: any };
+  return json.data as {
+    status: string;
+    reference: string;
+    amount: number;
+    id?: number | string;
+    paid_at?: string | null;
+    channel?: string | null;
+    metadata?: any;
+  };
 }
 
 /** Append a payment event to the audit log. Never throws. */
