@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          email_error: string | null
+          email_status: string
+          id: string
+          is_read: boolean
+          order_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          email_error?: string | null
+          email_status?: string
+          id?: string
+          is_read?: boolean
+          order_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          email_error?: string | null
+          email_status?: string
+          id?: string
+          is_read?: boolean
+          order_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -134,23 +178,29 @@ export type Database = {
         Row: {
           address_line1: string
           address_line2: string | null
+          amount_paid: number
           city: string
           created_at: string
           credit_applied: number
+          currency: string
           email: string
           full_name: string
           id: string
           notes: string | null
           order_number: string
+          paid_at: string | null
           payment_provider: string | null
           payment_reference: string | null
+          payment_status: string
           paystack_reference: string | null
           paystack_status: string | null
+          paystack_transaction_id: string | null
           phone: string
           shipping_fee: number
           shipping_zone_id: string | null
           state: string
           status: Database["public"]["Enums"]["order_status"]
+          stock_applied: boolean
           subtotal: number
           total: number
           updated_at: string
@@ -159,23 +209,29 @@ export type Database = {
         Insert: {
           address_line1: string
           address_line2?: string | null
+          amount_paid?: number
           city: string
           created_at?: string
           credit_applied?: number
+          currency?: string
           email: string
           full_name: string
           id?: string
           notes?: string | null
           order_number?: string
+          paid_at?: string | null
           payment_provider?: string | null
           payment_reference?: string | null
+          payment_status?: string
           paystack_reference?: string | null
           paystack_status?: string | null
+          paystack_transaction_id?: string | null
           phone: string
           shipping_fee?: number
           shipping_zone_id?: string | null
           state: string
           status?: Database["public"]["Enums"]["order_status"]
+          stock_applied?: boolean
           subtotal?: number
           total?: number
           updated_at?: string
@@ -184,23 +240,29 @@ export type Database = {
         Update: {
           address_line1?: string
           address_line2?: string | null
+          amount_paid?: number
           city?: string
           created_at?: string
           credit_applied?: number
+          currency?: string
           email?: string
           full_name?: string
           id?: string
           notes?: string | null
           order_number?: string
+          paid_at?: string | null
           payment_provider?: string | null
           payment_reference?: string | null
+          payment_status?: string
           paystack_reference?: string | null
           paystack_status?: string | null
+          paystack_transaction_id?: string | null
           phone?: string
           shipping_fee?: number
           shipping_zone_id?: string | null
           state?: string
           status?: Database["public"]["Enums"]["order_status"]
+          stock_applied?: boolean
           subtotal?: number
           total?: number
           updated_at?: string
@@ -212,6 +274,53 @@ export type Database = {
             columns: ["shipping_zone_id"]
             isOneToOne: false
             referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_logs: {
+        Row: {
+          context: Json
+          created_at: string
+          event: string
+          id: string
+          level: string
+          message: string | null
+          order_id: string | null
+          provider: string
+          reference: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          event: string
+          id?: string
+          level?: string
+          message?: string | null
+          order_id?: string | null
+          provider?: string
+          reference?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          event?: string
+          id?: string
+          level?: string
+          message?: string | null
+          order_id?: string | null
+          provider?: string
+          reference?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -503,6 +612,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_order_stock: { Args: { _order_id: string }; Returns: boolean }
       generate_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
