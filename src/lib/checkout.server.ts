@@ -158,23 +158,199 @@ export async function paystackVerify(reference: string) {
   return json.data as { status: string; reference: string; amount: number; metadata?: any };
 }
 
-/** Mark an order paid exactly once and settle any referral reward. */
-export async function markOrderPaid(admin: AnyClient, orderId: string, reference: string) {
+/** Append a payment event to the audit log. Never throws. */
+export async function logPayment(
+  admin: AnyClient,
+  entry: {
+    orderId?: string | null;
+    userId?: string | null;
+    event: string;
+    level?: "info" | "warn" | "error";
+    reference?: string | null;
+    message?: string | null;
+    context?: Record<string, unknown>;
+  },
+) {
+  const level = entry.level ?? "info";
+  const line = `[payment:${entry.event}] ${entry.message ?? ""} ref=${entry.reference ?? "-"} order=${entry.orderId ?? "-"}`;
+  if (level === "error") console.error(line);
+  else if (level === "warn") console.warn(line);
+  else console.log(line);
+  try {
+    await admin.from("payment_logs").insert({
+      order_id: entry.orderId ?? null,
+      user_id: entry.userId ?? null,
+      provider: "paystack",
+      event: entry.event,
+      level,
+      reference: entry.reference ?? null,
+      message: entry.message ?? null,
+      context: entry.context ?? {},
+    });
+  } catch (e) {
+    console.error("[payment] could not persist log", (e as Error).message);
+  }
+}
+
+export function siteBaseUrl(hint?: string | null) {
+  return (hint || process.env.SITE_URL || "https://nexovira-shop-hub.lovable.app").replace(/\/$/, "");
+}
+
+/** Email + record an admin notification for a freshly paid order. Never throws. */
+export async function notifyAdminOfPaidOrder(admin: AnyClient, orderId: string, baseUrl?: string | null) {
+  try {
+    const { renderAdminOrderEmail, sendEmail, adminEmailRecipient } = await import("./email.server");
+
+    const { data: order } = await admin
+      .from("orders")
+      .select(
+        "id, order_number, full_name, email, phone, address_line1, address_line2, city, state, subtotal, shipping_fee, credit_applied, total, amount_paid, payment_status, payment_provider, paystack_reference, paystack_transaction_id, created_at",
+      )
+      .eq("id", orderId)
+      .maybeSingle();
+    if (!order) return;
+
+    const { data: items } = await admin
+      .from("order_items")
+      .select("title, quantity, unit_price, image_url")
+      .eq("order_id", orderId);
+
+    const adminUrl = `${siteBaseUrl(baseUrl)}/admin/orders/${order.id}`;
+    const html = renderAdminOrderEmail({
+      orderId: order.id,
+      orderNumber: order.order_number,
+      customerName: order.full_name ?? "—",
+      customerEmail: order.email ?? "—",
+      customerPhone: order.phone ?? "—",
+      address: [order.address_line1, order.address_line2, order.city, order.state]
+        .filter(Boolean)
+        .join(", "),
+      items: (items ?? []).map((i: any) => ({
+        title: i.title,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price),
+        image_url: i.image_url ?? null,
+      })),
+      subtotal: Number(order.subtotal ?? 0),
+      shipping: Number(order.shipping_fee ?? 0),
+      creditApplied: Number(order.credit_applied ?? 0),
+      total: Number(order.total ?? 0),
+      amountPaid: Number(order.amount_paid ?? 0),
+      paymentStatus: order.payment_status ?? "paid",
+      paymentMethod: order.payment_provider === "cash_on_delivery" ? "Cash on delivery" : "Paystack",
+      reference: order.paystack_reference ?? "—",
+      transactionId: order.paystack_transaction_id ?? "—",
+      orderDate: new Date(order.created_at as string).toLocaleString("en-NG", { timeZone: "Africa/Lagos" }),
+      adminUrl,
+    });
+
+    const result = await sendEmail({
+      to: adminEmailRecipient(),
+      subject: `New paid order ${order.order_number} — ${order.full_name ?? "Customer"}`,
+      html,
+    });
+
+    await admin.from("admin_notifications").insert({
+      type: "order_paid",
+      title: `Payment received for order ${order.order_number}`,
+      body: `${order.full_name ?? "Customer"} paid ${Number(order.amount_paid ?? order.total ?? 0)} NGN.`,
+      order_id: order.id,
+      email_status: result.status,
+      email_error: result.error ?? null,
+    });
+
+    await logPayment(admin, {
+      orderId: order.id,
+      event: "admin_notified",
+      level: result.status === "failed" ? "warn" : "info",
+      reference: order.paystack_reference,
+      message: `Admin email ${result.status}`,
+      context: { error: result.error ?? null },
+    });
+  } catch (e) {
+    console.error("[payment] admin notification failed", (e as Error).message);
+  }
+}
+
+/** Mark an order paid exactly once, apply stock, notify admin and settle referrals. */
+export async function markOrderPaid(
+  admin: AnyClient,
+  orderId: string,
+  reference: string,
+  tx?: { transactionId?: string | number | null; amountKobo?: number | null; paidAt?: string | null; channel?: string | null },
+  baseUrl?: string | null,
+) {
   // Conditional update: only a still-pending order transitions to paid. Concurrent
   // webhook retries lose the race and affect zero rows, so the referral reward and
   // any downstream side effects run exactly once.
+  const patch: Record<string, unknown> = {
+    status: "paid",
+    payment_status: "paid",
+    paystack_status: "success",
+    paystack_reference: reference,
+    paid_at: tx?.paidAt ?? new Date().toISOString(),
+  };
+  if (tx?.transactionId != null) patch.paystack_transaction_id = String(tx.transactionId);
+  if (tx?.amountKobo != null) patch.amount_paid = Number(tx.amountKobo) / 100;
+
   const { data: updated, error } = await admin
     .from("orders")
-    .update({ status: "paid", paystack_status: "success", paystack_reference: reference })
+    .update(patch)
     .eq("id", orderId)
     .eq("status", "pending")
-    .select("id, user_id");
+    .select("id, user_id, total, amount_paid");
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    await logPayment(admin, {
+      orderId,
+      event: "mark_paid_failed",
+      level: "error",
+      reference,
+      message: error.message,
+    });
+    throw new Error(error.message);
+  }
+
   const row = updated?.[0];
-  if (!row) return { alreadyProcessed: true };
+  if (!row) {
+    await logPayment(admin, {
+      orderId,
+      event: "mark_paid_duplicate",
+      reference,
+      message: "Order was not pending; ignoring duplicate confirmation",
+    });
+    return { alreadyProcessed: true };
+  }
+
+  // Backfill amount_paid when Paystack did not give us an amount (e.g. fully
+  // credit-covered orders) so invoices always show what was actually settled.
+  if (tx?.amountKobo == null) {
+    await admin.from("orders").update({ amount_paid: Number(row.total ?? 0) }).eq("id", orderId);
+  }
+
+  const { error: stockError } = await admin.rpc("apply_order_stock", { _order_id: orderId });
+  await logPayment(admin, {
+    orderId,
+    userId: row.user_id,
+    event: stockError ? "stock_update_failed" : "stock_updated",
+    level: stockError ? "error" : "info",
+    reference,
+    message: stockError?.message ?? "Inventory decremented",
+  });
 
   if (row.user_id) await settleReferralReward(admin, row.user_id, orderId);
+
+  await logPayment(admin, {
+    orderId,
+    userId: row.user_id,
+    event: "order_paid",
+    reference,
+    message: "Order marked paid",
+    context: { transactionId: tx?.transactionId ?? null, channel: tx?.channel ?? null },
+  });
+
+  await notifyAdminOfPaidOrder(admin, orderId, baseUrl);
+
   return { alreadyProcessed: false };
 }
 
