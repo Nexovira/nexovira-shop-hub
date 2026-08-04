@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { SearchBox } from "@/components/search-box";
+import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, ShieldCheck, Headphones, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -10,10 +12,12 @@ import heroAsset from "@/assets/nexovira-hero.jpg.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NEXOVIRA — Premium Electrical Appliances in Nigeria" },
+      { title: "Nexovira Appliance Store — Smart Appliances. Smarter Living." },
       { name: "description", content: "Shop TVs, kitchen appliances, home & office electricals from trusted brands. Fast delivery across Nigeria." },
-      { property: "og:title", content: "NEXOVIRA — Premium Electrical Appliances" },
+      { property: "og:title", content: "Nexovira Appliance Store — Smart Appliances. Smarter Living." },
       { property: "og:description", content: "Shop TVs, kitchen appliances, home & office electricals with nationwide delivery." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: HomePage,
@@ -25,7 +29,7 @@ function HomePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, title, slug, price, discount_price, short_description, product_images(image_url, is_primary)")
+        .select("id, title, slug, brand, price, discount_price, short_description, category_id, product_images(image_url, is_primary)")
         .eq("status", "published")
         .order("created_at", { ascending: false })
         .limit(200);
@@ -42,6 +46,12 @@ function HomePage() {
       return data;
     },
   });
+
+  const counts = products.reduce<Record<string, number>>((acc, p) => {
+    if (p.category_id) acc[p.category_id] = (acc[p.category_id] ?? 0) + 1;
+    return acc;
+  }, {});
+
 
   return (
     <div className="min-h-screen bg-background">
