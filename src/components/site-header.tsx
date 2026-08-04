@@ -54,11 +54,10 @@ export function SiteHeader() {
           </div>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <Link to="/" className="hover:text-foreground transition-colors">Shop</Link>
-          <a href="#featured" className="hover:text-foreground transition-colors">Featured</a>
-          <a href="#categories" className="hover:text-foreground transition-colors">Categories</a>
-        </nav>
+        <div className="hidden md:block flex-1 max-w-md mx-8">
+          <SearchBox />
+        </div>
+
 
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm" className="relative gap-2">
