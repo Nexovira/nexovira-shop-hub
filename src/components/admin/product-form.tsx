@@ -116,7 +116,7 @@ export function ProductForm({ productId }: { productId?: string }) {
         description: v.description || null, short_description: v.short_description || null,
         category_id: v.category_id || null, price: Number(v.price),
         discount_price: v.discount_price ? Number(v.discount_price) : null,
-        sku: v.sku || null, stock_quantity: Number(v.stock_quantity) || 0,
+        sku: v.sku || null, brand: v.brand.trim() || null, stock_quantity: Number(v.stock_quantity) || 0,
         track_inventory: v.track_inventory, is_digital: v.is_digital,
         digital_file_url: v.is_digital && v.digital_file_url ? v.digital_file_url : null,
         status: v.status, is_featured: v.is_featured,
@@ -128,12 +128,19 @@ export function ProductForm({ productId }: { productId?: string }) {
       if (id) {
         const { error } = await supabase.from("products").update(payload).eq("id", id);
         if (error) throw error;
+        // Keep previously shared links working when the slug changes.
+        if (existing?.slug && existing.slug !== payload.slug) {
+          await supabase
+            .from("product_slug_redirects")
+            .upsert({ old_slug: existing.slug, product_id: id }, { onConflict: "old_slug" });
+        }
       } else {
         const { data: userData } = await supabase.auth.getUser();
         const { data, error } = await supabase.from("products").insert({ ...payload, created_by: userData.user?.id }).select("id").single();
         if (error) throw error;
         id = data.id;
       }
+
 
       // Replace images: delete missing, upsert current
       const existingIds = new Set((existing?.product_images ?? []).map((i: any) => i.id));
