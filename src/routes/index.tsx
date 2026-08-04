@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, ShieldCheck, Headphones, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import heroAsset from "@/assets/nexovira-hero.jpg.asset.json";
+import heroImage from "@/assets/nexovira-hero.jpg";;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,13 +60,13 @@ function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero text-white">
         <img
-          src={heroAsset.url}
-          alt="Modern Nigerian living room fitted with a large TV, refrigerator, microwave and air conditioner"
-          width={1920}
-          height={1088}
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+      src={heroImage}
+      alt="Modern Nigerian living room fitted with appliances"
+      width={1920}
+      height={1088}
+      fetchPriority="high"
+      className="absolute inset-0 h-full w-full object-cover"
+    />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-primary/40" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="max-w-2xl">
