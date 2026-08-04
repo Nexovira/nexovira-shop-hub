@@ -129,10 +129,33 @@ function HomePage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((c) => (
-              <Card key={c.id} className="group overflow-hidden shadow-soft hover:shadow-lifted transition-all cursor-pointer p-6">
-                <div className="text-lg font-semibold">{c.name}</div>
-                <div className="text-sm text-muted-foreground mt-1 line-clamp-2">{c.description || "Explore this collection"}</div>
-              </Card>
+              <Link key={c.id} to="/categories/$slug" params={{ slug: c.slug }} className="group">
+                <Card className="overflow-hidden shadow-soft hover:shadow-lifted transition-all p-0 h-full">
+                  <div className="aspect-[4/3] bg-muted overflow-hidden">
+                    {c.image_url ? (
+                      <img
+                        src={c.image_url}
+                        alt={c.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                        <Zap className="h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="text-lg font-semibold">{c.name}</div>
+                    <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {c.description || "Explore this collection"}
+                    </div>
+                    <div className="mt-2 text-xs font-medium text-primary">
+                      {counts[c.id] ?? 0} product{(counts[c.id] ?? 0) === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
@@ -150,37 +173,11 @@ function HomePage() {
           <EmptyPanel text="Products will appear here once your admin publishes them from the dashboard." />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((p) => {
-              const img = p.product_images?.find((i: any) => i.is_primary)?.image_url || p.product_images?.[0]?.image_url;
-              return (
-                <Link key={p.id} to="/products/$slug" params={{ slug: p.slug }}>
-                  <Card className="overflow-hidden shadow-soft hover:shadow-lifted transition-all group p-0 h-full">
-                    <div className="aspect-square bg-muted overflow-hidden">
-                      {img ? (
-                        <img src={img} alt={p.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                          <Zap className="h-8 w-8" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold line-clamp-1">{p.title}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.short_description}</p>
-                      <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-lg font-bold">₦{(p.discount_price ?? p.price).toLocaleString()}</span>
-                        {p.discount_price && (
-                          <span className="text-xs line-through text-muted-foreground">₦{p.price.toLocaleString()}</span>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
+            {products.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
       </section>
+
 
       <footer className="border-t border-border bg-secondary/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 text-sm text-muted-foreground flex flex-wrap items-center justify-between gap-4">
