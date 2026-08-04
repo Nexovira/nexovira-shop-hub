@@ -52,7 +52,7 @@ export function SiteHeader() {
           />
           <div className="leading-tight">
             <div className="text-base font-bold tracking-tight">NEXOVIRA</div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Global Ventures</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Appliance Store</div>
           </div>
         </Link>
 
