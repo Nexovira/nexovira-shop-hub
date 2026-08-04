@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -31,6 +32,11 @@ import { Route as AuthenticatedAdminProductsNewRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminProductsIdRouteImport } from './routes/_authenticated/admin/products.$id'
 import { Route as AuthenticatedAdminOrdersIdRouteImport } from './routes/_authenticated/admin/orders.$id'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
+  '/search': typeof SearchRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/referrals': typeof AuthenticatedReferralsRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
+  '/search': typeof SearchRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/wallet': typeof AuthenticatedWalletRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
+  '/search': typeof SearchRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cart'
+    | '/search'
     | '/admin'
     | '/checkout'
     | '/referrals'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cart'
+    | '/search'
     | '/checkout'
     | '/referrals'
     | '/wallet'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/cart'
+    | '/search'
     | '/_authenticated/admin'
     | '/_authenticated/checkout'
     | '/_authenticated/referrals'
@@ -287,12 +299,20 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
+  SearchRoute: typeof SearchRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
   ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cart': {
       id: '/cart'
       path: '/cart'
@@ -499,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
+  SearchRoute: SearchRoute,
   ProductsSlugRoute: ProductsSlugRoute,
   ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
 }

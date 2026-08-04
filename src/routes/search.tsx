@@ -67,7 +67,7 @@ function SearchPage() {
 
   useEffect(() => {
     navigate({
-      search: (prev) => ({
+      search: (prev: SearchParams) => ({
         ...prev,
         min: debouncedMin === "" ? undefined : Number(debouncedMin),
         max: debouncedMax === "" ? undefined : Number(debouncedMax),
@@ -130,7 +130,7 @@ function SearchPage() {
   });
 
   function setParam(key: keyof SearchParams, value: string | undefined) {
-    navigate({ search: (prev) => ({ ...prev, [key]: value || undefined }), replace: true });
+    navigate({ search: (prev: SearchParams) => ({ ...prev, [key]: value || undefined }), replace: true });
   }
 
   const hasFilters = !!(params.category || params.brand || params.min !== undefined || params.max !== undefined || params.sort);
