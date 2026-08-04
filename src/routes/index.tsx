@@ -79,7 +79,10 @@ function HomePage() {
             <p className="mt-6 text-lg text-white/80 max-w-xl">
               From flagship refrigerators to compact kitchen essentials — NEXOVIRA delivers trusted electrical appliances across Nigeria.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 max-w-lg">
+              <SearchBox />
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg" className="bg-accent-gradient text-primary hover:opacity-90 font-semibold shadow-lifted">
                 <a href="#featured">Shop the collection <ArrowRight className="ml-2 h-4 w-4" /></a>
               </Button>
@@ -87,6 +90,7 @@ function HomePage() {
                 <a href="#categories">Browse categories</a>
               </Button>
             </div>
+
           </div>
         </div>
       </section>
