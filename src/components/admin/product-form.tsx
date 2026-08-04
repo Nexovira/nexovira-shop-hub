@@ -17,7 +17,7 @@ import { useNavigate } from "@tanstack/react-router";
 export interface ProductImage { id?: string; image_url: string; is_primary: boolean; sort_order: number; }
 export interface ProductFormValues {
   title: string; slug: string; description: string; short_description: string;
-  category_id: string | null; price: string; discount_price: string; sku: string;
+  category_id: string | null; price: string; discount_price: string; sku: string; brand: string;
   stock_quantity: string; track_inventory: boolean; is_digital: boolean;
   digital_file_url: string; status: "draft" | "published"; is_featured: boolean;
   weight_kg: string; specifications: string; images: ProductImage[];
@@ -25,10 +25,11 @@ export interface ProductFormValues {
 
 const empty: ProductFormValues = {
   title: "", slug: "", description: "", short_description: "",
-  category_id: null, price: "", discount_price: "", sku: "",
+  category_id: null, price: "", discount_price: "", sku: "", brand: "",
   stock_quantity: "0", track_inventory: true, is_digital: false, digital_file_url: "",
   status: "draft", is_featured: false, weight_kg: "", specifications: "{}", images: [],
 };
+
 
 export function ProductForm({ productId }: { productId?: string }) {
   const navigate = useNavigate();
