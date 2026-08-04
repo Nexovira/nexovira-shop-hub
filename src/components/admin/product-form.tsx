@@ -261,9 +261,14 @@ export function ProductForm({ productId }: { productId?: string }) {
           <Card className="p-6 space-y-4">
             <h2 className="font-semibold">Inventory</h2>
             <div className="space-y-2">
+              <Label htmlFor="brand">Brand</Label>
+              <Input id="brand" value={v.brand} onChange={(e) => setV({ ...v, brand: e.target.value })} placeholder="e.g. LG, Hisense, Binatone" />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="sku">SKU</Label>
               <Input id="sku" value={v.sku} onChange={(e) => setV({ ...v, sku: e.target.value })} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="stock">Stock quantity</Label>
               <Input id="stock" type="number" min="0" value={v.stock_quantity} onChange={(e) => setV({ ...v, stock_quantity: e.target.value })} />
