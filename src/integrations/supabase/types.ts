@@ -396,8 +396,38 @@ export type Database = {
           },
         ]
       }
+      product_slug_redirects: {
+        Row: {
+          created_at: string
+          id: string
+          old_slug: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          old_slug: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          old_slug?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_slug_redirects_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
+          brand: string | null
           category_id: string | null
           created_at: string
           created_by: string | null
@@ -420,6 +450,7 @@ export type Database = {
           weight_kg: number | null
         }
         Insert: {
+          brand?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -442,6 +473,7 @@ export type Database = {
           weight_kg?: number | null
         }
         Update: {
+          brand?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string | null
