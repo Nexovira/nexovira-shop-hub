@@ -60,7 +60,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       description: existing.description ?? "", short_description: existing.short_description ?? "",
       category_id: existing.category_id, price: String(existing.price ?? ""),
       discount_price: existing.discount_price != null ? String(existing.discount_price) : "",
-      sku: existing.sku ?? "", stock_quantity: String(existing.stock_quantity ?? 0),
+      sku: existing.sku ?? "", brand: existing.brand ?? "", stock_quantity: String(existing.stock_quantity ?? 0),
       track_inventory: existing.track_inventory, is_digital: existing.is_digital,
       digital_file_url: existing.digital_file_url ?? "", status: existing.status,
       is_featured: existing.is_featured, weight_kg: existing.weight_kg != null ? String(existing.weight_kg) : "",
