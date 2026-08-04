@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { User, LayoutDashboard, LogOut, ShoppingCart, Package, Gift, Wallet } from "lucide-react";
 import logoAsset from "@/assets/nexovira-logo.jpeg";
 import { useCart } from "@/lib/cart";
+import { SearchBox } from "@/components/search-box";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
