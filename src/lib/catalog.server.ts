@@ -22,7 +22,7 @@ export type PublicProduct = {
   discount_price: number | null;
   stock_quantity: number;
   track_inventory: boolean;
-  specifications: Record<string, unknown> | null;
+  specifications: Record<string, string | number | boolean | null> | null;
   categories: { name: string; slug: string } | null;
   product_images: {
     image_url: string;
