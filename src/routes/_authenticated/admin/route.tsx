@@ -6,21 +6,31 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) throw redirect({ to: "/auth" });
+
+    if (!userData.user) {
+      throw redirect({ to: "/auth" });
+    }
+
     const { data: roleRow, error } = await supabase
-  .from("user_roles")
-  .select("role")
-  .eq("id", userData.user.id)
-  .eq("role", "admin")
-  .maybeSingle();
+      .from("user_roles")
+      .select("role")
+      .eq("id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
 
-console.log("Current User ID:", userData.user.id);
-console.log("Role Row:", roleRow);
-console.log("Error:", error);
+    console.log("Current User ID:", userData.user.id);
+    console.log("Role Row:", roleRow);
+    console.log("Error:", error);
 
-if (!roleRow) {
-  throw redirect({ to: "/", search: {} as never });
-}
+    if (error) {
+      console.error(error);
+    }
+
+    if (!roleRow) {
+      throw redirect({ to: "/" });
+    }
+  }, // <-- This comma was missing
+
   component: AdminLayout,
 });
 
@@ -33,8 +43,14 @@ function AdminLayout() {
           <header className="sticky top-0 z-30 h-14 flex items-center gap-3 border-b border-border bg-background/80 backdrop-blur px-4">
             <SidebarTrigger />
             <div className="flex-1" />
-            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">← Back to store</Link>
+            <Link
+              to="/"
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              ← Back to store
+            </Link>
           </header>
+
           <main className="flex-1 p-4 md:p-8">
             <Outlet />
           </main>
