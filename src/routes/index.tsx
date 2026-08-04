@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { SearchBox } from "@/components/search-box";
+import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Truck, ShieldCheck, Headphones, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -10,10 +12,12 @@ import heroAsset from "@/assets/nexovira-hero.jpg.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NEXOVIRA — Premium Electrical Appliances in Nigeria" },
+      { title: "Nexovira Appliance Store — Smart Appliances. Smarter Living." },
       { name: "description", content: "Shop TVs, kitchen appliances, home & office electricals from trusted brands. Fast delivery across Nigeria." },
-      { property: "og:title", content: "NEXOVIRA — Premium Electrical Appliances" },
+      { property: "og:title", content: "Nexovira Appliance Store — Smart Appliances. Smarter Living." },
       { property: "og:description", content: "Shop TVs, kitchen appliances, home & office electricals with nationwide delivery." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: HomePage,
@@ -25,7 +29,7 @@ function HomePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, title, slug, price, discount_price, short_description, product_images(image_url, is_primary)")
+        .select("id, title, slug, brand, price, discount_price, short_description, category_id, product_images(image_url, is_primary)")
         .eq("status", "published")
         .order("created_at", { ascending: false })
         .limit(200);
@@ -42,6 +46,12 @@ function HomePage() {
       return data;
     },
   });
+
+  const counts = products.reduce<Record<string, number>>((acc, p) => {
+    if (p.category_id) acc[p.category_id] = (acc[p.category_id] ?? 0) + 1;
+    return acc;
+  }, {});
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,7 +79,10 @@ function HomePage() {
             <p className="mt-6 text-lg text-white/80 max-w-xl">
               From flagship refrigerators to compact kitchen essentials — NEXOVIRA delivers trusted electrical appliances across Nigeria.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 max-w-lg">
+              <SearchBox />
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg" className="bg-accent-gradient text-primary hover:opacity-90 font-semibold shadow-lifted">
                 <a href="#featured">Shop the collection <ArrowRight className="ml-2 h-4 w-4" /></a>
               </Button>
@@ -77,6 +90,7 @@ function HomePage() {
                 <a href="#categories">Browse categories</a>
               </Button>
             </div>
+
           </div>
         </div>
       </section>
@@ -115,10 +129,33 @@ function HomePage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((c) => (
-              <Card key={c.id} className="group overflow-hidden shadow-soft hover:shadow-lifted transition-all cursor-pointer p-6">
-                <div className="text-lg font-semibold">{c.name}</div>
-                <div className="text-sm text-muted-foreground mt-1 line-clamp-2">{c.description || "Explore this collection"}</div>
-              </Card>
+              <Link key={c.id} to="/categories/$slug" params={{ slug: c.slug }} className="group">
+                <Card className="overflow-hidden shadow-soft hover:shadow-lifted transition-all p-0 h-full">
+                  <div className="aspect-[4/3] bg-muted overflow-hidden">
+                    {c.image_url ? (
+                      <img
+                        src={c.image_url}
+                        alt={c.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                        <Zap className="h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="text-lg font-semibold">{c.name}</div>
+                    <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {c.description || "Explore this collection"}
+                    </div>
+                    <div className="mt-2 text-xs font-medium text-primary">
+                      {counts[c.id] ?? 0} product{(counts[c.id] ?? 0) === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
@@ -136,37 +173,11 @@ function HomePage() {
           <EmptyPanel text="Products will appear here once your admin publishes them from the dashboard." />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((p) => {
-              const img = p.product_images?.find((i: any) => i.is_primary)?.image_url || p.product_images?.[0]?.image_url;
-              return (
-                <Link key={p.id} to="/products/$slug" params={{ slug: p.slug }}>
-                  <Card className="overflow-hidden shadow-soft hover:shadow-lifted transition-all group p-0 h-full">
-                    <div className="aspect-square bg-muted overflow-hidden">
-                      {img ? (
-                        <img src={img} alt={p.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                          <Zap className="h-8 w-8" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold line-clamp-1">{p.title}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.short_description}</p>
-                      <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-lg font-bold">₦{(p.discount_price ?? p.price).toLocaleString()}</span>
-                        {p.discount_price && (
-                          <span className="text-xs line-through text-muted-foreground">₦{p.price.toLocaleString()}</span>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
+            {products.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
       </section>
+
 
       <footer className="border-t border-border bg-secondary/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 text-sm text-muted-foreground flex flex-wrap items-center justify-between gap-4">

@@ -17,7 +17,7 @@ import { useNavigate } from "@tanstack/react-router";
 export interface ProductImage { id?: string; image_url: string; is_primary: boolean; sort_order: number; }
 export interface ProductFormValues {
   title: string; slug: string; description: string; short_description: string;
-  category_id: string | null; price: string; discount_price: string; sku: string;
+  category_id: string | null; price: string; discount_price: string; sku: string; brand: string;
   stock_quantity: string; track_inventory: boolean; is_digital: boolean;
   digital_file_url: string; status: "draft" | "published"; is_featured: boolean;
   weight_kg: string; specifications: string; images: ProductImage[];
@@ -25,10 +25,11 @@ export interface ProductFormValues {
 
 const empty: ProductFormValues = {
   title: "", slug: "", description: "", short_description: "",
-  category_id: null, price: "", discount_price: "", sku: "",
+  category_id: null, price: "", discount_price: "", sku: "", brand: "",
   stock_quantity: "0", track_inventory: true, is_digital: false, digital_file_url: "",
   status: "draft", is_featured: false, weight_kg: "", specifications: "{}", images: [],
 };
+
 
 export function ProductForm({ productId }: { productId?: string }) {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       description: existing.description ?? "", short_description: existing.short_description ?? "",
       category_id: existing.category_id, price: String(existing.price ?? ""),
       discount_price: existing.discount_price != null ? String(existing.discount_price) : "",
-      sku: existing.sku ?? "", stock_quantity: String(existing.stock_quantity ?? 0),
+      sku: existing.sku ?? "", brand: existing.brand ?? "", stock_quantity: String(existing.stock_quantity ?? 0),
       track_inventory: existing.track_inventory, is_digital: existing.is_digital,
       digital_file_url: existing.digital_file_url ?? "", status: existing.status,
       is_featured: existing.is_featured, weight_kg: existing.weight_kg != null ? String(existing.weight_kg) : "",
@@ -115,7 +116,7 @@ export function ProductForm({ productId }: { productId?: string }) {
         description: v.description || null, short_description: v.short_description || null,
         category_id: v.category_id || null, price: Number(v.price),
         discount_price: v.discount_price ? Number(v.discount_price) : null,
-        sku: v.sku || null, stock_quantity: Number(v.stock_quantity) || 0,
+        sku: v.sku || null, brand: v.brand.trim() || null, stock_quantity: Number(v.stock_quantity) || 0,
         track_inventory: v.track_inventory, is_digital: v.is_digital,
         digital_file_url: v.is_digital && v.digital_file_url ? v.digital_file_url : null,
         status: v.status, is_featured: v.is_featured,
@@ -127,12 +128,19 @@ export function ProductForm({ productId }: { productId?: string }) {
       if (id) {
         const { error } = await supabase.from("products").update(payload).eq("id", id);
         if (error) throw error;
+        // Keep previously shared links working when the slug changes.
+        if (existing?.slug && existing.slug !== payload.slug) {
+          await supabase
+            .from("product_slug_redirects")
+            .upsert({ old_slug: existing.slug, product_id: id }, { onConflict: "old_slug" });
+        }
       } else {
         const { data: userData } = await supabase.auth.getUser();
         const { data, error } = await supabase.from("products").insert({ ...payload, created_by: userData.user?.id }).select("id").single();
         if (error) throw error;
         id = data.id;
       }
+
 
       // Replace images: delete missing, upsert current
       const existingIds = new Set((existing?.product_images ?? []).map((i: any) => i.id));
@@ -253,9 +261,14 @@ export function ProductForm({ productId }: { productId?: string }) {
           <Card className="p-6 space-y-4">
             <h2 className="font-semibold">Inventory</h2>
             <div className="space-y-2">
+              <Label htmlFor="brand">Brand</Label>
+              <Input id="brand" value={v.brand} onChange={(e) => setV({ ...v, brand: e.target.value })} placeholder="e.g. LG, Hisense, Binatone" />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="sku">SKU</Label>
               <Input id="sku" value={v.sku} onChange={(e) => setV({ ...v, sku: e.target.value })} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="stock">Stock quantity</Label>
               <Input id="stock" type="number" min="0" value={v.stock_quantity} onChange={(e) => setV({ ...v, stock_quantity: e.target.value })} />
