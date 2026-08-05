@@ -4,32 +4,20 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  ssr: false,
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw redirect({ to: "/auth" });
 
-    if (!userData.user) {
-      throw redirect({ to: "/auth" });
-    }
-
-    const { data: roleRow, error } = await supabase
+    const { data: roleRow } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("id", userData.user.id)
+      .eq("user_id", userData.user.id)
       .eq("role", "admin")
       .maybeSingle();
 
-    console.log("Current User ID:", userData.user.id);
-    console.log("Role Row:", roleRow);
-    console.log("Error:", error);
-
-    if (error) {
-      console.error(error);
-    }
-
-    if (!roleRow) {
-      throw redirect({ to: "/" });
-    }
-  }, // <-- This comma was missing
+    if (!roleRow) throw redirect({ to: "/" });
+  },
 
   component: AdminLayout,
 });
