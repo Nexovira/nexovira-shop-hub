@@ -358,6 +358,107 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_recipients: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean
+          recipient_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          recipient_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean
+          recipient_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payouts: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          amount: number
+          bank_name: string | null
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          reason: string | null
+          recipient_id: string | null
+          reference: string | null
+          requested_by: string | null
+          status: string
+          transfer_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          amount: number
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          reason?: string | null
+          recipient_id?: string | null
+          reference?: string | null
+          requested_by?: string | null
+          status?: string
+          transfer_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          amount?: number
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          reason?: string | null
+          recipient_id?: string | null
+          reference?: string | null
+          requested_by?: string | null
+          status?: string
+          transfer_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "payout_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           alt_text: string | null
