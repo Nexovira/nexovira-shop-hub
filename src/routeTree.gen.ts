@@ -24,6 +24,7 @@ import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedPaymentCallbackRouteImport } from './routes/_authenticated/payment.callback'
 import { Route as AuthenticatedOrdersIdRouteImport } from './routes/_authenticated/orders.$id'
+import { Route as AuthenticatedAdminWalletRouteImport } from './routes/_authenticated/admin/wallet'
 import { Route as AuthenticatedAdminShippingRouteImport } from './routes/_authenticated/admin/shipping'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin/categories'
 import { Route as AuthenticatedAdminProductsIndexRouteImport } from './routes/_authenticated/admin/products.index'
@@ -109,6 +110,12 @@ const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
   path: '/orders/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminWalletRoute =
+  AuthenticatedAdminWalletRouteImport.update({
+    id: '/wallet',
+    path: '/wallet',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminShippingRoute =
   AuthenticatedAdminShippingRouteImport.update({
     id: '/shipping',
@@ -171,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/products/$slug': typeof ProductsSlugRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/shipping': typeof AuthenticatedAdminShippingRoute
+  '/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/payment/callback': typeof AuthenticatedPaymentCallbackRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/products/$slug': typeof ProductsSlugRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/shipping': typeof AuthenticatedAdminShippingRoute
+  '/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/payment/callback': typeof AuthenticatedPaymentCallbackRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/products/$slug': typeof ProductsSlugRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/shipping': typeof AuthenticatedAdminShippingRoute
+  '/_authenticated/admin/wallet': typeof AuthenticatedAdminWalletRoute
   '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/_authenticated/payment/callback': typeof AuthenticatedPaymentCallbackRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/products/$slug'
     | '/admin/categories'
     | '/admin/shipping'
+    | '/admin/wallet'
     | '/orders/$id'
     | '/payment/callback'
     | '/admin/'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/products/$slug'
     | '/admin/categories'
     | '/admin/shipping'
+    | '/admin/wallet'
     | '/orders/$id'
     | '/payment/callback'
     | '/admin'
@@ -294,6 +306,7 @@ export interface FileRouteTypes {
     | '/products/$slug'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/shipping'
+    | '/_authenticated/admin/wallet'
     | '/_authenticated/orders/$id'
     | '/_authenticated/payment/callback'
     | '/_authenticated/admin/'
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/wallet': {
+      id: '/_authenticated/admin/wallet'
+      path: '/wallet'
+      fullPath: '/admin/wallet'
+      preLoaderRoute: typeof AuthenticatedAdminWalletRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/shipping': {
       id: '/_authenticated/admin/shipping'
       path: '/shipping'
@@ -486,6 +506,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminShippingRoute: typeof AuthenticatedAdminShippingRoute
+  AuthenticatedAdminWalletRoute: typeof AuthenticatedAdminWalletRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminOrdersIdRoute: typeof AuthenticatedAdminOrdersIdRoute
   AuthenticatedAdminProductsIdRoute: typeof AuthenticatedAdminProductsIdRoute
@@ -498,6 +519,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
   {
     AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
     AuthenticatedAdminShippingRoute: AuthenticatedAdminShippingRoute,
+    AuthenticatedAdminWalletRoute: AuthenticatedAdminWalletRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
     AuthenticatedAdminOrdersIdRoute: AuthenticatedAdminOrdersIdRoute,
     AuthenticatedAdminProductsIdRoute: AuthenticatedAdminProductsIdRoute,
